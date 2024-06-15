@@ -1,2 +1,2 @@
 # arfsynth
-Software synth
+Simple modular software synth
