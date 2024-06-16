@@ -18,13 +18,16 @@
 
 */
 
-#ifndef _AUDIO_H
-#define _AUDIO_H
+#ifndef _CONFIG_H
+#define _CONFIG_H
 
-void audio_enum_drivers();
-int audio_enum_devices(const char *driver);
+#include <stdlib.h>
 
-int audio_init();
-void audio_deinit();
+extern char *audio_driver;
+extern char *audio_device;
+extern long int samp_rate;
+extern long int block_size;
 
-#endif /* _AUDIO_H */
+int parse_config(char *file);
+
+#endif /* _CONFIG_H */

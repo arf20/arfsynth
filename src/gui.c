@@ -28,6 +28,7 @@
 #define WWIDTH  1280
 #define WHEIGHT 720
 
+
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 

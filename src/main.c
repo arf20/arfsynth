@@ -21,18 +21,34 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 
+#include "config.h"
 #include "audio.h"
 #include "gui.h"
 
 
 int
-main()
+main(int argc, char **argv)
 {
     printf("arfsynth\nLicensed under GPLv3\n");
 
-    audio_init();
-    gui_init();
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            if (strcmp(argv[i], "--audio-drivers") == 0)
+                audio_enum_drivers();
+            else if (strcmp(argv[i], "--audio-devices") == 0) {
+                if (i + 1 < argc) {
+                    if (audio_enum_devices(argv[i + 1]) < 0) return 1;
+                } else fprintf(stderr, "Too few arguments\n");
+            }
+        }
+        return 0;
+    }
+
+    if (parse_config("../config.conf") < 0) return 1;
+    if (audio_init() < 0) return 1;
+    if (gui_init() < 0) return 1;
 
     gui_loop();
 

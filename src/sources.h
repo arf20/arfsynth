@@ -18,13 +18,9 @@
 
 */
 
-#ifndef _AUDIO_H
-#define _AUDIO_H
+#ifndef _SOURCES_H
+#define _SOURCES_H
 
-void audio_enum_drivers();
-int audio_enum_devices(const char *driver);
 
-int audio_init();
-void audio_deinit();
 
-#endif /* _AUDIO_H */
+#endif /* _SOURCES_H */
