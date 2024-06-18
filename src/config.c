@@ -32,20 +32,26 @@ char *audio_driver = NULL;
 char *audio_device = NULL;
 long int samp_rate = 0;
 long int block_size = 0;
+long int width = 0;
+long int height = 0;
 
 int
 parse_config(char *file)
 {
     audio_driver = strdup("pulseaudio");
     audio_device = strdup("");
-    long int samp_rate = 48000;
-    long int block_size = 1024;
+    samp_rate = 48000;
+    block_size = 1024;
+    width = 1280;
+    height = 720;
 
     cfg_opt_t opts[] = {
 		CFG_SIMPLE_STR("audio_driver", &audio_driver),
 		CFG_SIMPLE_STR("audio_device", &audio_device),
 		CFG_SIMPLE_INT("samp_rate", &samp_rate),
 		CFG_SIMPLE_INT("block_size", &block_size),
+        CFG_SIMPLE_INT("width", &width),
+		CFG_SIMPLE_INT("height", &height),
 		CFG_END()
 	};
 	cfg_t *cfg;

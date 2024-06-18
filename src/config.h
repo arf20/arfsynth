@@ -27,6 +27,8 @@ extern char *audio_driver;
 extern char *audio_device;
 extern long int samp_rate;
 extern long int block_size;
+extern long int width;
+extern long int height;
 
 int parse_config(char *file);
 

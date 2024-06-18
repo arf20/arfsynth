@@ -22,15 +22,23 @@
 
 #include "gui.h"
 
+#include "config.h"
+#include "audio.h"
+
 #include <SDL2/SDL.h>
 
 
-#define WWIDTH  1280
-#define WHEIGHT 720
+typedef struct {
+    struct scope {
+        float top, bottom;
+    } scope;
+} layout_t;
 
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+
+static layout_t layout;
 
 int
 gui_init()
@@ -39,11 +47,11 @@ gui_init()
     SDL_Init(SDL_INIT_VIDEO);
 
     window = SDL_CreateWindow(
-        "arfsynth",                   // window title
+        "arfsynth",                         // window title
         SDL_WINDOWPOS_UNDEFINED,            // initial x position
         SDL_WINDOWPOS_UNDEFINED,            // initial y position
-        WWIDTH,                             // width, in pixels
-        WHEIGHT,                            // height, in pixels
+        width,                              // width, in pixels
+        height,                             // height, in pixels
         SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
     );
 
@@ -59,7 +67,20 @@ gui_init()
         return -1;
     }
 
+    layout = (layout_t) {
+        0.66f, 1.0f
+    };
+
+    
+
     return 0;
+}
+
+int
+scope_y_map(float s)
+{
+    return (((layout.scope.bottom - layout.scope.top) * 0.5f * (s + 1.0f))
+        + layout.scope.top) * height;
 }
 
 void
@@ -69,11 +90,21 @@ gui_loop()
     SDL_Event event;
 
     while (run) {
-        /* Clear */
+        /* Render Clear */
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
+        /* Draw layout */
+        SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+        SDL_RenderDrawLine(renderer, 0, scope_y_map(1.0f),
+            width, scope_y_map(1.0f));
 
+        /* Draw waveforms */
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        for (int i = 0; i < block_size - 1; i++) {
+            SDL_RenderDrawLine(renderer, i, scope_y_map(last_block[i]),
+                i + 1, scope_y_map(last_block[i + 1]));
+        }
 
         SDL_RenderPresent(renderer);
 

@@ -29,9 +29,6 @@
 
 #define PI          3.1415926535897932384626
 
-#define SAMP_RATE	48000
-#define BLOCK_SIZE	1024
-
 
 float *last_block = NULL;
 
@@ -43,10 +40,13 @@ callback(void *userdata, Uint8 *stream, int len)
 	float *buff = (float*)stream;
 	int block_off = 0;
 
-	for (int i = 0; i < BLOCK_SIZE; i++) {
-		float t = (float)i / (float)SAMP_RATE;
+	for (int i = 0; i < block_size; i++) {
+		float t = (float)i / (float)samp_rate;
 		buff[i] = sin(2.0f * PI * 440.0f * t);
 	}
+
+	/* Copy rendered block to buffer for gui */
+	memcpy(last_block, buff, len);
 }
 
 void
@@ -77,6 +77,9 @@ audio_enum_devices(const char *driver)
 int
 audio_init()
 {
+	/* Allocate graphic buffer */
+	last_block = malloc(sizeof(float) * block_size);
+
     /* Driver init */
     if (SDL_AudioInit(audio_driver) < 0) {
         printf("Cannot initialize driver: %d\n", SDL_GetError());
@@ -89,8 +92,8 @@ audio_init()
     SDL_AudioSpec desired_fmt = { };
     desired_fmt.format =    AUDIO_F32SYS;       /* Signed int (32 bits) */
     desired_fmt.channels =  1;                  /* Stereo */
-    desired_fmt.freq =      SAMP_RATE;          /* 48KHz */
-    desired_fmt.samples =   BLOCK_SIZE;         /* 1024 */
+    desired_fmt.freq =      samp_rate;          /* 48KHz */
+    desired_fmt.samples =   block_size;         /* 1024 */
     desired_fmt.callback =  callback;
     desired_fmt.userdata =  NULL;
 
