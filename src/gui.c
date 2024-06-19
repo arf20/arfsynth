@@ -25,6 +25,8 @@
 #include "config.h"
 #include "audio.h"
 
+#include <unistd.h>
+
 #include <SDL2/SDL.h>
 
 
@@ -107,6 +109,8 @@ gui_loop()
         }
 
         SDL_RenderPresent(renderer);
+
+        usleep(17000);
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {

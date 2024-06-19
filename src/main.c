@@ -28,6 +28,15 @@
 #include "gui.h"
 
 
+void
+usage(const char *name)
+{
+    printf("Usage: %s\n"
+        "\t\t--audio-drivers\tEnumerates audio drivers\n"
+        "\t--audio-devices <driver>\tEnumerates output audio devices for driver\n",
+        name);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -41,6 +50,9 @@ main(int argc, char **argv)
                 if (i + 1 < argc) {
                     if (audio_enum_devices(argv[i + 1]) < 0) return 1;
                 } else fprintf(stderr, "Too few arguments\n");
+            } else {
+                printf("Unknown option: %s\n", argv[i]);
+                usage(argv[0]);
             }
         }
         return 0;

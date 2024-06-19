@@ -22,37 +22,47 @@
 
 #include "audio.h"
 #include "config.h"
+#include "sources.h"
 
 #include <stdio.h>
 
 #include <SDL2/SDL_audio.h>
-
-#define PI          3.1415926535897932384626
 
 
 float *last_block = NULL;
 
 static SDL_AudioDeviceID sink;
 
+static source_node_t *sources;
+
 static void SDLCALL
 callback(void *userdata, Uint8 *stream, int len)
 {
-	float *buff = (float*)stream;
-	int block_off = 0;
+    float *buff = (float*)stream;
+    static int block_off = 0;
 
-	for (int i = 0; i < block_size; i++) {
-		float t = (float)i / (float)samp_rate;
-		buff[i] = sin(2.0f * PI * 440.0f * t);
-	}
+    for (int i = 0; i < block_size; i++) {
+        float t = (float)(block_off + i) / (float)samp_rate;
+        buff[i] = 0.0f;
+        for (source_node_t *s = sources; s != NULL; s = s->next)
+            buff[i] += source_sample(t, &s->source);
+    }
 
-	/* Copy rendered block to buffer for gui */
-	memcpy(last_block, buff, len);
+    block_off += block_size;
+
+    /* for graphics */
+    for (int i = 0; i < block_size; i++) {
+        float t = (float)(i) / (float)samp_rate;
+        last_block[i] = 0.0f;
+        for (source_node_t *s = sources; s != NULL; s = s->next)
+            last_block[i] += source_sample(t, &s->source);
+    }
 }
 
 void
 audio_enum_drivers()
 {
-	int num_drivers = SDL_GetNumAudioDrivers();
+    int num_drivers = SDL_GetNumAudioDrivers();
     printf("Audio drivers [%d]:\n", num_drivers);
     for (int i = 0; i < num_drivers; i++)
         printf("\t%s\n", SDL_GetAudioDriver(i));
@@ -61,24 +71,24 @@ audio_enum_drivers()
 int
 audio_enum_devices(const char *driver)
 {
-	if (SDL_AudioInit(driver) < 0) {
+    if (SDL_AudioInit(driver) < 0) {
         printf("Cannot initialize driver: %d\n", SDL_GetError());
         return -1;
     }
 
-	int num_devs = SDL_GetNumAudioDevices(SDL_FALSE);
+    int num_devs = SDL_GetNumAudioDevices(SDL_FALSE);
     printf("Output devices for %s [%d]:\n", driver, num_devs);
     for (int i = 0; i < num_devs; i++)
         printf("\t%s\n", SDL_GetAudioDeviceName(i, SDL_FALSE));
 
-	SDL_AudioQuit();
+    SDL_AudioQuit();
 }
 
 int
 audio_init()
 {
-	/* Allocate graphic buffer */
-	last_block = malloc(sizeof(float) * block_size);
+    /* Allocate graphic buffer */
+    last_block = malloc(sizeof(float) * block_size);
 
     /* Driver init */
     if (SDL_AudioInit(audio_driver) < 0) {
@@ -102,12 +112,24 @@ audio_init()
 
     sink = SDL_OpenAudioDevice(
         audio_device, SDL_FALSE, &desired_fmt, &obtained_fmt, 0
-	);
+    );
     
     if (sink == 0) {
         printf("Cannot open output device: %d\n", SDL_GetError());
         return -1;
     }
+
+    /* sample chord */
+    sources = malloc(sizeof(source_node_t));
+    sources->source = (source_t) { SOURCE_SINE, 440.0f, 0.2f, 0.0f };
+
+    sources->next = malloc(sizeof(source_node_t));
+    sources->next->source = (source_t) { SOURCE_SINE, 261.63f, 0.2f, 0.0f };
+
+    sources->next->next = malloc(sizeof(source_node_t));
+    sources->next->next->source = (source_t) { SOURCE_SINE, 329.63f, 0.2f, 0.0f };
+
+    sources->next->next = NULL;
 
     /* Start audio */
     SDL_PauseAudioDevice(sink, 0);
@@ -118,5 +140,5 @@ audio_init()
 void
 audio_deinit()
 {
-	SDL_CloseAudioDevice(sink);
+    SDL_CloseAudioDevice(sink);
 }

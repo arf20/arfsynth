@@ -21,6 +21,18 @@
 #ifndef _SOURCES_H
 #define _SOURCES_H
 
+#define PI          3.1415926535897932384626
 
+typedef struct {
+    enum { SOURCE_SINE } type;
+    float f, a, p;
+} source_t;
+
+typedef struct source_node_s {
+    source_t source;
+    struct source_node_s *next; 
+} source_node_t;
+
+float source_sample(float t, source_t *source);
 
 #endif /* _SOURCES_H */
