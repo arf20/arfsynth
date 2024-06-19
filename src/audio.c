@@ -29,7 +29,7 @@
 #include <SDL2/SDL_audio.h>
 
 
-float *last_block = NULL;
+double *gui_block = NULL;
 
 static SDL_AudioDeviceID sink;
 

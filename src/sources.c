@@ -24,8 +24,8 @@
 
 #include <math.h>
 
-float
-source_sample(float t, source_t *source)
+double
+source_sample(double t, source_t *source)
 {
     switch (source->type) {
         case SOURCE_SINE: {

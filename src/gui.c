@@ -29,11 +29,16 @@
 
 #include <SDL2/SDL.h>
 
+#include <fftw3.h>
+
 
 typedef struct {
-    struct scope {
-        float top, bottom;
+    struct {
+        double top, bottom;
     } scope;
+    struct {
+        double top, bottom;
+    } spectrograph;
 } layout_t;
 
 
@@ -41,6 +46,9 @@ static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
 static layout_t layout;
+
+static fftw_plan fft_plan = NULL;
+static double *spectrum = NULL;
 
 int
 gui_init()
@@ -70,19 +78,33 @@ gui_init()
     }
 
     layout = (layout_t) {
-        0.66f, 1.0f
+        0.66f, 1.0f,
+        0.33f, 0.66f
     };
 
-    
+    /* Allocate and define FFT spectrum */
+    spectrum = malloc(sizeof(double) * block_size);
+
+    fft_plan = fftw_plan_r2r_1d(block_size, last_block, spectrum,
+        FFTW_R2HC, FFTW_ESTIMATE);
+
+
 
     return 0;
 }
 
 int
-scope_y_map(float s)
+scope_y_map(double s)
 {
-    return (((layout.scope.bottom - layout.scope.top) * 0.5f * (s + 1.0f))
+    return (((layout.scope.bottom - layout.scope.top) * 0.5f * ((-s) + 1.0f))
         + layout.scope.top) * height;
+}
+
+int
+spectrum_y_map(double s)
+{
+    return (((layout.spectrograph.bottom - layout.spectrograph.top) * 0.5f * ((-s) + 1.0f))
+        + layout.spectrograph.top) * height;
 }
 
 void
@@ -92,20 +114,29 @@ gui_loop()
     SDL_Event event;
 
     while (run) {
+        /* Compute FFT spectrum */
+        fftw_execute(fft_plan);
+
         /* Render Clear */
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         /* Draw layout */
-        SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+        SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         SDL_RenderDrawLine(renderer, 0, scope_y_map(1.0f),
             width, scope_y_map(1.0f));
 
-        /* Draw waveforms */
+        /* Draw waveform scope */
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         for (int i = 0; i < block_size - 1; i++) {
             SDL_RenderDrawLine(renderer, i, scope_y_map(last_block[i]),
                 i + 1, scope_y_map(last_block[i + 1]));
+        }
+
+        /* Draw FFT spectrograph */
+        for (int i = 0; i < block_size - 1; i++) {
+            SDL_RenderDrawLine(renderer, i, spectrum_y_map(spectrum[i]),
+                i + 1, spectrum_y_map(spectrum[i + 1]));
         }
 
         SDL_RenderPresent(renderer);
@@ -129,6 +160,7 @@ gui_loop()
 void
 gui_deinit()
 {
+    fftw_destroy_plan(fft_plan);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

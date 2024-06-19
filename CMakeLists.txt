@@ -6,4 +6,4 @@ file(GLOB SRC "src/*.c")
 
 add_executable(arfsynth ${SRC})
 
-target_link_libraries(arfsynth m SDL2 confuse)
+target_link_libraries(arfsynth m SDL2 confuse fftw3)
