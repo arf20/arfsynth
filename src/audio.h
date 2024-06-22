@@ -21,7 +21,7 @@
 #ifndef _AUDIO_H
 #define _AUDIO_H
 
-extern double *last_block;
+extern double *gui_block;
 
 void audio_enum_drivers();
 int audio_enum_devices(const char *driver);

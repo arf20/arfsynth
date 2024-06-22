@@ -53,9 +53,9 @@ callback(void *userdata, Uint8 *stream, int len)
     /* for graphics */
     for (int i = 0; i < block_size; i++) {
         float t = (float)(i) / (float)samp_rate;
-        last_block[i] = 0.0f;
+        gui_block[i] = 0.0f;
         for (source_node_t *s = sources; s != NULL; s = s->next)
-            last_block[i] += source_sample(t, &s->source);
+            gui_block[i] += source_sample(t, &s->source);
     }
 }
 
@@ -88,7 +88,7 @@ int
 audio_init()
 {
     /* Allocate graphic buffer */
-    last_block = malloc(sizeof(float) * block_size);
+    gui_block = malloc(sizeof(double) * block_size);
 
     /* Driver init */
     if (SDL_AudioInit(audio_driver) < 0) {

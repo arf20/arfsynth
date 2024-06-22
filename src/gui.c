@@ -26,6 +26,7 @@
 #include "audio.h"
 
 #include <unistd.h>
+#include <sys/param.h>
 
 #include <SDL2/SDL.h>
 
@@ -85,7 +86,7 @@ gui_init()
     /* Allocate and define FFT spectrum */
     spectrum = malloc(sizeof(double) * block_size);
 
-    fft_plan = fftw_plan_r2r_1d(block_size, last_block, spectrum,
+    fft_plan = fftw_plan_r2r_1d(block_size, gui_block, spectrum,
         FFTW_R2HC, FFTW_ESTIMATE);
 
 
@@ -96,15 +97,27 @@ gui_init()
 int
 scope_y_map(double s)
 {
-    return (((layout.scope.bottom - layout.scope.top) * 0.5f * ((-s) + 1.0f))
+    return (((layout.scope.bottom - layout.scope.top) * 0.5 * ((-s) + 1.0))
         + layout.scope.top) * height;
 }
 
 int
-spectrum_y_map(double s)
+spectrum_y_map(double s, double max_abs)
 {
-    return (((layout.spectrograph.bottom - layout.spectrograph.top) * 0.5f * ((-s) + 1.0f))
-        + layout.spectrograph.top) * height;
+    //s = 20.0*log(abs(s));
+    s = 20.0*log(fabs(s) / max_abs);
+    
+    s = (s - -100.0) 
+        * (layout.spectrograph.top - layout.spectrograph.bottom)
+        / (3.0 - -100.0)
+        + layout.spectrograph.bottom;
+    if (s < layout.spectrograph.top) s = layout.spectrograph.top;
+    if (s > layout.spectrograph.bottom) s = layout.spectrograph.bottom;
+    s *= height;
+    printf("%f\n", s);
+    //if (s > 3.0) return layout.spectrograph.top * height;
+    //f (s < -100.0) return layout.spectrograph.bottom * height;
+    return (int)s;
 }
 
 void
@@ -125,18 +138,27 @@ gui_loop()
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         SDL_RenderDrawLine(renderer, 0, scope_y_map(1.0f),
             width, scope_y_map(1.0f));
+        SDL_RenderDrawLine(renderer, 0, layout.spectrograph.top * height,
+            width, layout.spectrograph.top * height);
 
         /* Draw waveform scope */
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         for (int i = 0; i < block_size - 1; i++) {
-            SDL_RenderDrawLine(renderer, i, scope_y_map(last_block[i]),
-                i + 1, scope_y_map(last_block[i + 1]));
+            SDL_RenderDrawLine(renderer, i, scope_y_map(gui_block[i]),
+                i + 1, scope_y_map(gui_block[i + 1]));
         }
 
         /* Draw FFT spectrograph */
+        double max_abs = 0.0;
+        for (int i = 0; i < block_size; i++) {
+            max_abs = MAX(max_abs, spectrum[i]);
+        }
+        //printf("%f\n", max_abs);
+
         for (int i = 0; i < block_size - 1; i++) {
-            SDL_RenderDrawLine(renderer, i, spectrum_y_map(spectrum[i]),
-                i + 1, spectrum_y_map(spectrum[i + 1]));
+            SDL_RenderDrawLine(renderer, 2*i, spectrum_y_map(spectrum[i], max_abs),
+                2*(i+1), spectrum_y_map(spectrum[i + 1], max_abs));
+            //printf("%d\n", spectrum_y_map(spectrum[i]));
         }
 
         SDL_RenderPresent(renderer);

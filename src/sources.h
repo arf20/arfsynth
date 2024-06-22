@@ -25,7 +25,7 @@
 
 typedef struct {
     enum { SOURCE_SINE } type;
-    double f, a, p;
+    float f, a, p;
 } source_t;
 
 typedef struct source_node_s {
@@ -33,6 +33,6 @@ typedef struct source_node_s {
     struct source_node_s *next; 
 } source_node_t;
 
-double source_sample(double t, source_t *source);
+float source_sample(float t, source_t *source);
 
 #endif /* _SOURCES_H */
