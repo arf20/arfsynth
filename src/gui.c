@@ -39,6 +39,7 @@ typedef struct {
     } scope;
     struct {
         double top, bottom;
+        double min_dbFS;
     } spectrograph;
 } layout_t;
 
@@ -79,8 +80,8 @@ gui_init()
     }
 
     layout = (layout_t) {
-        0.66f, 1.0f,
-        0.33f, 0.66f
+        { 0.66, 1.0 },
+        { 0.33, 0.66, -60.0 }
     };
 
     /* Allocate and define FFT spectrum */
@@ -104,19 +105,16 @@ scope_y_map(double s)
 int
 spectrum_y_map(double s, double max_abs)
 {
-    //s = 20.0*log(abs(s));
     s = 20.0*log(fabs(s) / max_abs);
     
-    s = (s - -100.0) 
+    s = (s - layout.spectrograph.min_dbFS) 
         * (layout.spectrograph.top - layout.spectrograph.bottom)
-        / (3.0 - -100.0)
+        / (3.0 - layout.spectrograph.min_dbFS)
         + layout.spectrograph.bottom;
     if (s < layout.spectrograph.top) s = layout.spectrograph.top;
     if (s > layout.spectrograph.bottom) s = layout.spectrograph.bottom;
     s *= height;
-    printf("%f\n", s);
-    //if (s > 3.0) return layout.spectrograph.top * height;
-    //f (s < -100.0) return layout.spectrograph.bottom * height;
+    
     return (int)s;
 }
 
@@ -153,12 +151,10 @@ gui_loop()
         for (int i = 0; i < block_size; i++) {
             max_abs = MAX(max_abs, spectrum[i]);
         }
-        //printf("%f\n", max_abs);
 
         for (int i = 0; i < block_size - 1; i++) {
-            SDL_RenderDrawLine(renderer, 2*i, spectrum_y_map(spectrum[i], max_abs),
-                2*(i+1), spectrum_y_map(spectrum[i + 1], max_abs));
-            //printf("%d\n", spectrum_y_map(spectrum[i]));
+            SDL_RenderDrawLine(renderer, 5*i, spectrum_y_map(spectrum[i], max_abs),
+                5*(i+1), spectrum_y_map(spectrum[i + 1], max_abs));
         }
 
         SDL_RenderPresent(renderer);
