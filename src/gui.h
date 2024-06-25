@@ -21,6 +21,8 @@
 #ifndef _GUI_H
 #define _GUI_H
 
+extern int keys[256];
+
 int gui_init();
 void gui_loop();
 void gui_deinit();

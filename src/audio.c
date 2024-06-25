@@ -23,6 +23,8 @@
 #include "audio.h"
 #include "config.h"
 #include "sources.h"
+#include "gui.h"
+#include "keymap.h"
 
 #include <stdio.h>
 
@@ -46,8 +48,11 @@ callback(void *userdata, Uint8 *stream, int len)
     for (int i = 0; i < block_size; i++) {
         float t = (float)(block_off + i) / (float)samp_rate;
         buff[i] = 0.0f;
-        for (vcolist_node_t *node = vcolist; node != NULL; node = node->next)
-            buff[i] += vco_sample(t, f_0, &node->data);
+        for (int j = 0; j < 255; j++) {
+            if (keys[j] && keymap[j])
+                for (vcolist_node_t *node = vcolist; node != NULL; node = node->next)
+                    buff[i] += vco_sample(t, freqs[keymap[j]], &node->data);
+        }
     }
 
     block_off += block_size;
@@ -57,7 +62,10 @@ callback(void *userdata, Uint8 *stream, int len)
         float t = (float)(i) / (float)samp_rate;
         gui_block[i] = 0.0f;
         for (vcolist_node_t *node = vcolist; node != NULL; node = node->next)
-            gui_block[i] += vco_sample(t, f_0, &node->data);
+            for (int j = 0; j < 255; j++)
+                if (keys[j] && keymap[j])
+                    gui_block[i] += vco_sample(t, freqs[keymap[j]], &node->data);
+        
     }
 }
 

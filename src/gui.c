@@ -52,6 +52,9 @@ static layout_t layout;
 static fftw_plan fft_plan = NULL;
 static double *spectrum = NULL;
 
+int keys[256] = { };
+
+
 int
 gui_init()
 {
@@ -106,14 +109,17 @@ scope_y_map(double s)
 int
 spectrum_y_map(double s, double max_abs)
 {
+    /* dbFS/bin conversion */
     s = 20.0*log(fabs(s) / max_abs);
-    
+    /* normalization and mapping */
     s = (s - layout.spectrograph.min_dbFS) 
         * (layout.spectrograph.top - layout.spectrograph.bottom)
         / (3.0 - layout.spectrograph.min_dbFS)
         + layout.spectrograph.bottom;
+    /* limiting - prevents absurd values from memory stalling SDL2 */
     if (s < layout.spectrograph.top) s = layout.spectrograph.top;
     if (s > layout.spectrograph.bottom) s = layout.spectrograph.bottom;
+    /* scaling to screen space */
     s *= height;
     
     return (int)s;
@@ -172,7 +178,12 @@ gui_loop()
                     return;
                 } break;
                 case SDL_KEYDOWN: {
-                    
+                    keys[event.key.keysym.scancode] = 1;
+                    printf("down: %d\n", event.key.keysym.scancode);
+                } break;
+                case SDL_KEYUP: {
+                    keys[event.key.keysym.scancode] = 0;
+                    printf("up: %d\n", event.key.keysym.scancode);
                 } break;
             }
         }
