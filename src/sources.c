@@ -25,11 +25,11 @@
 #include <math.h>
 
 float
-source_sample(float t, source_t *source)
+vco_sample(float t, float f, vco_t *vco)
 {
-    switch (source->type) {
+    switch (vco->type) {
         case SOURCE_SINE: {
-            return source->a * sin((2.0f * PI * source->f * t) + source->p);
+            return vco->a * sin((2.0f * PI * vco->ff * f * t) + vco->p);
         } break;
     }
 }

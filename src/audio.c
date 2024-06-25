@@ -33,7 +33,9 @@ double *gui_block = NULL;
 
 static SDL_AudioDeviceID sink;
 
-static source_node_t *sources;
+static vcolist_node_t *vcolist;
+
+static float f_0 = 440.0f;
 
 static void SDLCALL
 callback(void *userdata, Uint8 *stream, int len)
@@ -44,8 +46,8 @@ callback(void *userdata, Uint8 *stream, int len)
     for (int i = 0; i < block_size; i++) {
         float t = (float)(block_off + i) / (float)samp_rate;
         buff[i] = 0.0f;
-        for (source_node_t *s = sources; s != NULL; s = s->next)
-            buff[i] += source_sample(t, &s->source);
+        for (vcolist_node_t *node = vcolist; node != NULL; node = node->next)
+            buff[i] += vco_sample(t, f_0, &node->data);
     }
 
     block_off += block_size;
@@ -54,8 +56,8 @@ callback(void *userdata, Uint8 *stream, int len)
     for (int i = 0; i < block_size; i++) {
         float t = (float)(i) / (float)samp_rate;
         gui_block[i] = 0.0f;
-        for (source_node_t *s = sources; s != NULL; s = s->next)
-            gui_block[i] += source_sample(t, &s->source);
+        for (vcolist_node_t *node = vcolist; node != NULL; node = node->next)
+            gui_block[i] += vco_sample(t, f_0, &node->data);
     }
 }
 
@@ -120,16 +122,16 @@ audio_init()
     }
 
     /* sample chord */
-    sources = malloc(sizeof(source_node_t));
-    sources->source = (source_t) { SOURCE_SINE, 440.0f, 0.2f, 0.0f };
+    vcolist = malloc(sizeof(vcolist_node_t));
+    vcolist->data = (vco_t) { SOURCE_SINE, 1.0f, 0.2f, 0.0f };
 
-    sources->next = malloc(sizeof(source_node_t));
-    sources->next->source = (source_t) { SOURCE_SINE, 261.63f, 0.2f, 0.0f };
+    vcolist->next = malloc(sizeof(vcolist_node_t));
+    vcolist->next->data = (vco_t) { SOURCE_SINE, 2.0f, 0.2f, 0.0f };
 
-    sources->next->next = malloc(sizeof(source_node_t));
-    sources->next->next->source = (source_t) { SOURCE_SINE, 329.63f, 0.2f, 0.0f };
+    vcolist->next->next = malloc(sizeof(vcolist_node_t));
+    vcolist->next->next->data = (vco_t) { SOURCE_SINE, 3.0f, 0.2f, 0.0f };
 
-    sources->next->next = NULL;
+    vcolist->next->next->next = NULL;
 
     /* Start audio */
     SDL_PauseAudioDevice(sink, 0);

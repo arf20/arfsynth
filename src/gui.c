@@ -39,7 +39,7 @@ typedef struct {
     } scope;
     struct {
         double top, bottom;
-        double min_dbFS;
+        double min_dbFS, zero_zoom;
     } spectrograph;
 } layout_t;
 
@@ -79,9 +79,10 @@ gui_init()
         return -1;
     }
 
+    /* layout config */
     layout = (layout_t) {
         { 0.66, 1.0 },
-        { 0.33, 0.66, -60.0 }
+        { 0.33, 0.66, -100.0, 5.0 }
     };
 
     /* Allocate and define FFT spectrum */
@@ -153,8 +154,11 @@ gui_loop()
         }
 
         for (int i = 0; i < block_size - 1; i++) {
-            SDL_RenderDrawLine(renderer, 5*i, spectrum_y_map(spectrum[i], max_abs),
-                5*(i+1), spectrum_y_map(spectrum[i + 1], max_abs));
+            SDL_RenderDrawLine(renderer,
+                layout.spectrograph.zero_zoom*i,
+                spectrum_y_map(spectrum[i], max_abs),
+                layout.spectrograph.zero_zoom*(i+1),
+                spectrum_y_map(spectrum[i + 1], max_abs));
         }
 
         SDL_RenderPresent(renderer);

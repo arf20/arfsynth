@@ -25,14 +25,14 @@
 
 typedef struct {
     enum { SOURCE_SINE } type;
-    float f, a, p;
-} source_t;
+    float ff, a, p;
+} vco_t;
 
-typedef struct source_node_s {
-    source_t source;
-    struct source_node_s *next; 
-} source_node_t;
+typedef struct vcolist_node_s {
+    vco_t data;
+    struct vcolist_node_s *next; 
+} vcolist_node_t;
 
-float source_sample(float t, source_t *source);
+float vco_sample(float t, float f, vco_t *vco);
 
 #endif /* _SOURCES_H */
